@@ -1,0 +1,21 @@
+package com.nckh.genealogy.repository;
+
+import com.nckh.genealogy.entity.PersonEvent;
+import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface PersonEventRepository extends JpaRepository<PersonEvent, UUID> {
+
+    @EntityGraph(attributePaths = {"person", "eventType", "roleInEvent", "address"})
+    List<PersonEvent> findByEventId(UUID eventId);
+
+    @EntityGraph(attributePaths = {"event", "eventType", "roleInEvent", "address"})
+    List<PersonEvent> findByPersonId(UUID personId);
+
+    boolean existsByPersonIdAndEventId(UUID personId, UUID eventId);
+}
