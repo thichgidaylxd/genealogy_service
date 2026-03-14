@@ -13,4 +13,6 @@ public interface TreeAddressRepository extends JpaRepository<TreeAddress, UUID> 
 
     @EntityGraph(attributePaths = {"address", "addressType"})
     List<TreeAddress> findByTreeId(UUID treeId);
+
+    boolean existsByAddressId(UUID addressId);
 }

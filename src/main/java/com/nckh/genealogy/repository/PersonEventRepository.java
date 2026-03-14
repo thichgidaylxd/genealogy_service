@@ -18,4 +18,6 @@ public interface PersonEventRepository extends JpaRepository<PersonEvent, UUID> 
     List<PersonEvent> findByPersonId(UUID personId);
 
     boolean existsByPersonIdAndEventId(UUID personId, UUID eventId);
+
+    boolean existsByAddressId(UUID addressId);
 }

@@ -1,11 +1,14 @@
 package com.nckh.genealogy.service.impl;
 
 import com.nckh.genealogy.dto.request.address.AddressRequest;
+import com.nckh.genealogy.dto.request.address.UpdatePersonAddressRequest;
+import com.nckh.genealogy.dto.request.address.UpdateTreeAddressRequest;
 import com.nckh.genealogy.dto.response.address.AddressResponse;
 import com.nckh.genealogy.entity.*;
 import com.nckh.genealogy.enums.TreeMemberStatus;
 import com.nckh.genealogy.exception.AppException;
 import com.nckh.genealogy.exception.ErrorCode;
+import com.nckh.genealogy.mapper.AddressMapper;
 import com.nckh.genealogy.repository.*;
 import com.nckh.genealogy.service.AddressService;
 import lombok.RequiredArgsConstructor;
@@ -26,12 +29,16 @@ public class AddressServiceImpl implements AddressService {
     private final PersonRepository personRepository;
     private final TreeRepository treeRepository;
     private final TreeMemberRepository treeMemberRepository;
+    private final AddressMapper addressMapper;
+    private final PersonEventRepository personEventRepository;
+    private final TreeEventRepository treeEventRepository;
 
     // ==================== Person Address ====================
 
     @Override
     @Transactional
-    public AddressResponse addPersonAddress(UUID personId, UUID requesterId, AddressRequest request) {
+    public AddressResponse addPersonAddress(UUID treeId, UUID personId, UUID requesterId, AddressRequest request) {
+        requireTreeMember(requesterId, treeId);
         Person person = personRepository.findByIdAndDeletedAtIsNull(personId)
                 .orElseThrow(() -> new AppException(ErrorCode.PERSON_NOT_FOUND));
 
@@ -62,7 +69,8 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AddressResponse> getPersonAddresses(UUID personId) {
+    public List<AddressResponse> getPersonAddresses(UUID treeId, UUID personId, UUID requesterId) {
+        requireTreeMember(requesterId, treeId);
         personRepository.findByIdAndDeletedAtIsNull(personId)
                 .orElseThrow(() -> new AppException(ErrorCode.PERSON_NOT_FOUND));
         return personAddressRepository.findByPersonId(personId)
@@ -80,7 +88,52 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public void removePersonAddress(UUID personId, UUID addressId, UUID requesterId) {
+    public AddressResponse updatePersonAddress(UUID treeId, UUID personId, UUID requesterId,
+                                               UUID addressId, UpdatePersonAddressRequest request) {
+        requireTreeMember(requesterId, treeId);
+
+        personRepository.findByIdAndDeletedAtIsNull(personId)
+                .orElseThrow(() -> new AppException(ErrorCode.PERSON_NOT_FOUND));
+
+        PersonAddress personAddress = personAddressRepository
+                .findByPersonIdAndAddressId(personId, addressId)
+                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+
+        // Lưu lại old address để cleanup sau
+        UUID oldAddressId = personAddress.getAddress().getId();
+
+        // Tạo Address mới thay vì mutate Address cũ (tránh ảnh hưởng các liên kết khác)
+        Address newAddress = addressMapper.toEntity(request);
+        addressRepository.save(newAddress);
+
+        // Cập nhật liên kết PersonAddress
+        AddressType addressType = findAddressType(request.addressTypeId());
+        Short isPrimary = Boolean.TRUE.equals(request.isPrimary()) ? (short) 1 : (short) 0;
+
+        if (isPrimary == 1 && personAddress.getIsPrimary() != 1) {
+            resetPrimaryPersonAddresses(personId);
+        }
+
+        personAddress.setAddress(newAddress);
+        personAddress.setAddressType(addressType);
+        personAddress.setFromDate(request.fromDate());
+        personAddress.setToDate(request.toDate());
+        personAddress.setIsPrimary(isPrimary);
+        personAddress.setDescription(request.description());
+        personAddressRepository.save(personAddress);
+
+        // Dọn Address cũ nếu không còn ai dùng
+        cleanupOrphanAddress(oldAddressId);
+
+        return buildAddressResponse(newAddress, addressType,
+                request.fromDate(), request.toDate(),
+                isPrimary == 1, request.description());
+    }
+
+    @Override
+    @Transactional
+    public void removePersonAddress(UUID treeId, UUID personId, UUID addressId, UUID requesterId) {
+        requireTreeMember(requesterId, personId);
         PersonAddressId id = new PersonAddressId(personId, addressId);
         if (!personAddressRepository.existsById(id)) {
             throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
@@ -133,6 +186,45 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
+    public AddressResponse updateTreeAddress(UUID treeId, UUID treeAddressId, UUID requesterId,
+                                             UpdateTreeAddressRequest request) {
+        requireTreeMember(requesterId, treeId);
+
+        TreeAddress treeAddress = treeAddressRepository.findById(treeAddressId)
+                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+
+        // Đảm bảo treeAddress thuộc đúng tree
+        if (!treeAddress.getTree().getId().equals(treeId)) {
+            throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
+        }
+
+        // Lưu lại old address để cleanup sau
+        UUID oldAddressId = treeAddress.getAddress().getId();
+
+        // Tạo Address mới thay vì mutate Address cũ
+        Address newAddress = addressMapper.toEntity(request);
+        addressRepository.save(newAddress);
+
+        // Cập nhật liên kết TreeAddress
+        AddressType addressType = findAddressType(request.addressTypeId());
+
+        treeAddress.setAddress(newAddress);
+        treeAddress.setAddressType(addressType);
+        treeAddress.setFromDate(request.fromDate());
+        treeAddress.setToDate(request.toDate());
+        treeAddress.setDescription(request.description());
+        treeAddressRepository.save(treeAddress);
+
+        // Dọn Address cũ nếu không còn ai dùng
+        cleanupOrphanAddress(oldAddressId);
+
+        return buildAddressResponse(newAddress, addressType,
+                request.fromDate(), request.toDate(),
+                false, request.description());
+    }
+
+    @Override
+    @Transactional
     public void removeTreeAddress(UUID treeId, UUID treeAddressId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
         TreeAddress treeAddress = treeAddressRepository.findById(treeAddressId)
@@ -145,6 +237,11 @@ public class AddressServiceImpl implements AddressService {
     }
 
     // ==================== Helpers ====================
+
+    private Address findById(UUID addressId) {
+        return addressRepository.findById(addressId)
+                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+    }
 
     private Address saveAddress(AddressRequest request) {
         Address address = Address.builder()
@@ -208,4 +305,16 @@ public class AddressServiceImpl implements AddressService {
                 description
         );
     }
+    private void cleanupOrphanAddress(UUID addressId) {
+        boolean usedByPerson = personAddressRepository.existsByAddressId(addressId);
+        boolean usedByTree   = treeAddressRepository.existsByAddressId(addressId);
+        boolean usedByEvent  = personEventRepository.existsByAddressId(addressId)
+                || treeEventRepository.existsByAddressId(addressId);
+
+        if (!usedByPerson && !usedByTree && !usedByEvent) {
+            addressRepository.deleteById(addressId);
+        }
+    }
+
+
 }

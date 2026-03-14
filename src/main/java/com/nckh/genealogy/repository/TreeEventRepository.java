@@ -13,4 +13,6 @@ public interface TreeEventRepository extends JpaRepository<TreeEvent, UUID> {
     boolean existsByTreeIdAndEventId(UUID treeId, UUID eventId);
 
     Optional<TreeEvent> findByTreeIdAndEventId(UUID treeId, UUID eventId);
+
+    boolean existsByAddressId(UUID addressId);
 }

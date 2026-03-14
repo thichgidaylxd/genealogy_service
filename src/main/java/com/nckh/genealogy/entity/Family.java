@@ -28,12 +28,12 @@ public class Family {
     @Column(updatable = false, nullable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent1_id", nullable = false)
     private Person parent1;
 
     // Nullable — có thể chưa biết người còn lại
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent2_id")
     private Person parent2;
 

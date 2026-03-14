@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record UpdatePersonAddressRequest(
+public record UpdateTreeAddressRequest(
         @NotBlank(message = "Địa chỉ đầy đủ không được để trống")
         String formattedAddress,
 
@@ -44,6 +44,5 @@ public record UpdatePersonAddressRequest(
 
         LocalDateTime fromDate,
         LocalDateTime toDate,
-        Boolean isPrimary,
         String description
 ) {}

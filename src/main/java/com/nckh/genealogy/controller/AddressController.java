@@ -1,6 +1,8 @@
 package com.nckh.genealogy.controller;
 
 import com.nckh.genealogy.dto.request.address.AddressRequest;
+import com.nckh.genealogy.dto.request.address.UpdatePersonAddressRequest;
+import com.nckh.genealogy.dto.request.address.UpdateTreeAddressRequest;
 import com.nckh.genealogy.dto.response.ApiResponse;
 import com.nckh.genealogy.dto.response.address.AddressResponse;
 import com.nckh.genealogy.service.AddressService;
@@ -28,15 +30,16 @@ public class AddressController {
             summary = "Thêm địa chỉ cho Person",
             description = "API dùng để thêm một địa chỉ mới cho person trong hệ thống."
     )
-    @PostMapping("/api/v1/persons/{personId}/addresses")
+    @PostMapping("/api/v1/trees/{treeId}/persons/{personId}/addresses")
     public ResponseEntity<ApiResponse<AddressResponse>> addPersonAddress(
+            @PathVariable UUID treeId,
             @PathVariable UUID personId,
             @AuthenticationPrincipal UUID userId,
             @Valid @RequestBody AddressRequest request) {
 
         return ResponseEntity.status(201).body(
                 ApiResponse.created(
-                        addressService.addPersonAddress(personId, userId, request)
+                        addressService.addPersonAddress(treeId, personId, userId, request)
                 )
         );
     }
@@ -45,13 +48,34 @@ public class AddressController {
             summary = "Lấy danh sách địa chỉ của Person",
             description = "Trả về toàn bộ danh sách địa chỉ đã gắn với person."
     )
-    @GetMapping("/api/v1/persons/{personId}/addresses")
+    @GetMapping("/api/v1/trees/{treeId}/persons/{personId}/addresses")
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getPersonAddresses(
-            @PathVariable UUID personId) {
+            @PathVariable UUID treeId,
+            @PathVariable UUID personId,
+            @AuthenticationPrincipal UUID userId) {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        addressService.getPersonAddresses(personId)
+                        addressService.getPersonAddresses(treeId, personId, userId)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Cập nhật địa chỉ của Person",
+            description = "Tạo address mới và cập nhật liên kết, tự động dọn address cũ nếu không còn ai dùng."
+    )
+    @PutMapping("/api/v1/trees/{treeId}/persons/{personId}/addresses/{addressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> updatePersonAddress(
+            @PathVariable UUID treeId,
+            @PathVariable UUID personId,
+            @PathVariable UUID addressId,
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody UpdatePersonAddressRequest request) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        addressService.updatePersonAddress(treeId, personId, userId, addressId, request)
                 )
         );
     }
@@ -60,13 +84,14 @@ public class AddressController {
             summary = "Xóa địa chỉ của Person",
             description = "Xóa một địa chỉ đã gắn với person."
     )
-    @DeleteMapping("/api/v1/persons/{personId}/addresses/{addressId}")
+    @DeleteMapping("/api/v1/trees/{treeId}/persons/{personId}/addresses/{addressId}")
     public ResponseEntity<ApiResponse<Void>> removePersonAddress(
+            @PathVariable UUID treeId,
             @PathVariable UUID personId,
             @PathVariable UUID addressId,
             @AuthenticationPrincipal UUID userId) {
 
-        addressService.removePersonAddress(personId, addressId, userId);
+        addressService.removePersonAddress(treeId, personId, addressId, userId);
 
         return ResponseEntity.ok(ApiResponse.noContent());
     }
@@ -102,6 +127,24 @@ public class AddressController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         addressService.getTreeAddresses(treeId, userId)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Cập nhật địa chỉ của Tree",
+            description = "Tạo address mới và cập nhật liên kết, tự động dọn address cũ nếu không còn ai dùng."
+    )
+    @PutMapping("/api/v1/trees/{treeId}/addresses/{treeAddressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> updateTreeAddress(
+            @PathVariable UUID treeId,
+            @PathVariable UUID treeAddressId,
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody UpdateTreeAddressRequest request) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        addressService.updateTreeAddress(treeId, treeAddressId, userId, request)
                 )
         );
     }
