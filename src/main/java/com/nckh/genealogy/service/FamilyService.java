@@ -34,5 +34,7 @@ public interface FamilyService {
     // Lấy toàn bộ cây gia phả để render
     TreeGraphResponse getTreeGraph(UUID treeId, UUID requesterId);
 
+    TreeGraphResponse getTreeGraphPublic(UUID treeId); // không cần requesterId
+
     PersonResponse addFirstPersonIntoTree(UUID treeId, UUID requesterId, CreatePersonRequest request);
 }

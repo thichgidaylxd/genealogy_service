@@ -259,67 +259,15 @@ public class FamilyServiceImpl implements FamilyService {
     @Transactional(readOnly = true)
     public TreeGraphResponse getTreeGraph(UUID treeId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
+        return buildTreeGraph(treeId);
+    }
 
-        // Lấy tất cả family trong tree
-        List<Family> families = familyRepository.findAllByTreeId(treeId);
-
-        // Lấy tất cả children
-        Map<UUID, List<UUID>> childrenMap = new HashMap<>();
-        for (Family f : families) {
-            List<UUID> childIds = familyChildRepository.findChildrenByFamilyId(f.getId())
-                    .stream()
-                    .map(fc -> fc.getPerson().getId())
-                    .toList();
-            childrenMap.put(f.getId(), childIds);
-        }
-
-        // Lấy tất cả person trong tree
-        List<Person> persons = treePersonRepository
-                .findByTreeIdAndDeletedAtIsNull(treeId)
-                .stream()
-                .map(TreePerson::getPerson)
-                .toList();
-
-        // Tính generation cho từng person bằng BFS
-        Map<UUID, Integer> generationMap = calculateGenerations(families, childrenMap, persons);
-
-        // Build PersonNode list
-        List<TreeGraphResponse.PersonNode> personNodes = persons.stream()
-                .map(p -> new TreeGraphResponse.PersonNode(
-                        p.getId(),
-                        p.getFirstName(),
-                        p.getLastName(),
-                        p.getLastName() + " " + p.getFirstName(),
-                        p.getGender(),
-                        p.getAvatarUrl(),
-                        p.getDateOfBirth(),
-                        p.getDateOfDeath(),
-                        generationMap.getOrDefault(p.getId(), 1)
-                ))
-                .toList();
-
-        // Build FamilyNode list
-        List<TreeGraphResponse.FamilyNode> familyNodes = families.stream()
-                .map(f -> new TreeGraphResponse.FamilyNode(
-                        f.getId(),
-                        f.getParent1().getId(),
-                        f.getParent2() != null ? f.getParent2().getId() : null,
-                        f.getUnionType(),
-                        childrenMap.getOrDefault(f.getId(), Collections.emptyList())
-                ))
-                .toList();
-
-        int totalGenerations = generationMap.values().stream()
-                .mapToInt(Integer::intValue).max().orElse(1);
-
-        // Root = person không có cha mẹ trong tree và có đời con
-        UUID rootPersonId = findRootPerson(persons, families);
-
-        return new TreeGraphResponse(
-                personNodes,
-                familyNodes,
-                new TreeGraphResponse.Meta(persons.size(), totalGenerations, rootPersonId)
-        );
+    @Override
+    @Transactional(readOnly = true)
+    public TreeGraphResponse getTreeGraphPublic(UUID treeId) {
+        treeRepository.findById(treeId)
+                .orElseThrow(() -> new AppException(ErrorCode.TREE_NOT_FOUND));
+        return buildTreeGraph(treeId); // dùng chung
     }
 
     @Transactional
@@ -554,5 +502,68 @@ public class FamilyServiceImpl implements FamilyService {
                 .filter(id -> !hasParent.contains(id))
                 .findFirst()
                 .orElse(persons.isEmpty() ? null : persons.get(0).getId());
+    }
+
+    private TreeGraphResponse buildTreeGraph(UUID treeId) {
+        // Lấy tất cả family trong tree
+        List<Family> families = familyRepository.findAllByTreeId(treeId);
+
+        // Lấy tất cả children
+        Map<UUID, List<UUID>> childrenMap = new HashMap<>();
+        for (Family f : families) {
+            List<UUID> childIds = familyChildRepository.findChildrenByFamilyId(f.getId())
+                    .stream()
+                    .map(fc -> fc.getPerson().getId())
+                    .toList();
+            childrenMap.put(f.getId(), childIds);
+        }
+
+        // Lấy tất cả person trong tree
+        List<Person> persons = treePersonRepository
+                .findByTreeIdAndDeletedAtIsNull(treeId)
+                .stream()
+                .map(TreePerson::getPerson)
+                .toList();
+
+        // Tính generation cho từng person bằng BFS
+        Map<UUID, Integer> generationMap = calculateGenerations(families, childrenMap, persons);
+
+        // Build PersonNode list
+        List<TreeGraphResponse.PersonNode> personNodes = persons.stream()
+                .map(p -> new TreeGraphResponse.PersonNode(
+                        p.getId(),
+                        p.getFirstName(),
+                        p.getLastName(),
+                        p.getLastName() + " " + p.getFirstName(),
+                        p.getGender(),
+                        p.getAvatarUrl(),
+                        p.getDateOfBirth(),
+                        p.getDateOfDeath(),
+                        generationMap.getOrDefault(p.getId(), 1)
+                ))
+                .toList();
+
+        // Build FamilyNode list
+        List<TreeGraphResponse.FamilyNode> familyNodes = families.stream()
+                .map(f -> new TreeGraphResponse.FamilyNode(
+                        f.getId(),
+                        f.getParent1().getId(),
+                        f.getParent2() != null ? f.getParent2().getId() : null,
+                        f.getUnionType(),
+                        childrenMap.getOrDefault(f.getId(), Collections.emptyList())
+                ))
+                .toList();
+
+        int totalGenerations = generationMap.values().stream()
+                .mapToInt(Integer::intValue).max().orElse(1);
+
+        // Root = person không có cha mẹ trong tree và có đời con
+        UUID rootPersonId = findRootPerson(persons, families);
+
+        return new TreeGraphResponse(
+                personNodes,
+                familyNodes,
+                new TreeGraphResponse.Meta(persons.size(), totalGenerations, rootPersonId)
+        );
     }
 }

@@ -3,8 +3,10 @@ package com.nckh.genealogy.controller;
 import com.nckh.genealogy.dto.request.invitation.CreateShareLinkRequest;
 import com.nckh.genealogy.dto.request.invitation.SendInvitationRequest;
 import com.nckh.genealogy.dto.response.ApiResponse;
+import com.nckh.genealogy.dto.response.family.TreeGraphResponse;
 import com.nckh.genealogy.dto.response.invitation.ShareLinkResponse;
 import com.nckh.genealogy.dto.response.tree.TreeResponse;
+import com.nckh.genealogy.service.FamilyService;
 import com.nckh.genealogy.service.InvitationService;
 import com.nckh.genealogy.service.TreeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +28,7 @@ public class InvitationController {
 
     private final InvitationService invitationService;
     private final TreeService treeService;
-
+    private final FamilyService familyService;
     @Operation(
             summary = "Gửi lời mời vào tree",
             description = "Admin gửi lời mời cho người khác tham gia tree qua email."
@@ -118,5 +120,13 @@ public class InvitationController {
                         treeService.getTreePublic(treeId)
                 )
         );
+    }
+
+    @GetMapping("/api/v1/share/graph")
+    public ResponseEntity<ApiResponse<TreeGraphResponse>> getTreeGraphByShareToken(
+            @RequestParam String token) {
+        UUID treeId = invitationService.getTreeIdByShareToken(token);
+        return ResponseEntity.ok(ApiResponse.success(
+                familyService.getTreeGraphPublic(treeId)));
     }
 }
