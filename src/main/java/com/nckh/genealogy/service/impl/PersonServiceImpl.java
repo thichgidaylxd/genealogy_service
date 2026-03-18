@@ -108,7 +108,7 @@ public class PersonServiceImpl implements PersonService {
 
     // ==================== Helper ====================
     private Person findPersonById(UUID id) {
-        return personRepository.findByIdAndDeletedAtIsNull(id)
+        return personRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PERSON_NOT_FOUND));
     }
 }

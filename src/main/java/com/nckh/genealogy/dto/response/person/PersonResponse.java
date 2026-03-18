@@ -16,5 +16,6 @@ public record PersonResponse(
         LocalDateTime dateOfDeath,
         String citizenIdentificationNumber,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        LocalDateTime deletedAt
 ) {}
