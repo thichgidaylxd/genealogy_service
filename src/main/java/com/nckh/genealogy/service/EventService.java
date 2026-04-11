@@ -3,6 +3,7 @@ package com.nckh.genealogy.service;
 import com.nckh.genealogy.dto.request.event.AddPersonToEventRequest;
 import com.nckh.genealogy.dto.request.event.AddTreeEventRequest;
 import com.nckh.genealogy.dto.request.event.CreateEventRequest;
+import com.nckh.genealogy.dto.request.event.CreatePersonEventRequest;
 import com.nckh.genealogy.dto.response.event.EventResponse;
 
 import java.util.List;
@@ -23,6 +24,8 @@ public interface EventService {
     // Thêm person tham gia event (kèm event_type, role, address, name)
     EventResponse addPersonToEvent(UUID treeId, UUID eventId, UUID requesterId,
                                    AddPersonToEventRequest request);
+
+    EventResponse createPersonEvent(UUID treeId, UUID requesterId, CreatePersonEventRequest request);
 
     void removePersonFromEvent(UUID treeId, UUID eventId, UUID personId, UUID requesterId);
 

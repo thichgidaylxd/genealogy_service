@@ -3,6 +3,7 @@ package com.nckh.genealogy.service.impl;
 import com.nckh.genealogy.dto.request.event.AddPersonToEventRequest;
 import com.nckh.genealogy.dto.request.event.AddTreeEventRequest;
 import com.nckh.genealogy.dto.request.event.CreateEventRequest;
+import com.nckh.genealogy.dto.request.event.CreatePersonEventRequest;
 import com.nckh.genealogy.dto.response.address.AddressResponse;
 import com.nckh.genealogy.dto.response.event.EventResponse;
 import com.nckh.genealogy.entity.*;
@@ -13,12 +14,14 @@ import com.nckh.genealogy.mapper.PersonMapper;
 import com.nckh.genealogy.repository.*;
 import com.nckh.genealogy.service.EventService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EventServiceImpl implements EventService {
@@ -216,5 +219,71 @@ public class EventServiceImpl implements EventService {
                 event.getCreatedBy() != null ? event.getCreatedBy().getUserName() : null,
                 participantResponses
         );
+    }
+
+    @Override
+    @Transactional
+    public EventResponse createPersonEvent(UUID treeId, UUID requesterId, CreatePersonEventRequest request) {
+
+        requireTreeMember(requesterId, treeId);
+
+        // ===== Validate person thuộc tree =====
+        if (!treePersonRepository.existsByTreeIdAndPersonIdAndDeletedAtIsNull(treeId, request.personId())) {
+            throw new AppException(ErrorCode.PERSON_NOT_FOUND);
+        }
+
+        User creator = userRepository.findById(requesterId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Person person = personRepository.findByIdAndDeletedAtIsNull(request.personId())
+                .orElseThrow(() -> new AppException(ErrorCode.PERSON_NOT_FOUND));
+
+        EventType eventType = eventTypeRepository.findById(request.eventTypeId())
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_TYPE_NOT_FOUND));
+
+        Address address = null;
+        if (request.addressId() != null) {
+            address = addressRepository.findById(request.addressId())
+                    .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+        }
+
+        Tree tree = treeRepository.findById(treeId)
+                .orElseThrow(() -> new AppException(ErrorCode.TREE_NOT_FOUND));
+
+        // ===== 1. Create Event =====
+        Event event = Event.builder()
+                .createdBy(creator)
+                .name(request.name())
+                .description(request.description())
+                .startedAt(request.startedAt())
+                .endedAt(request.endedAt())
+                .status((short) 1)
+                .build();
+
+        eventRepository.save(event);
+
+        // ===== 2. Gắn vào Tree =====
+        TreeEvent treeEvent = TreeEvent.builder()
+                .tree(tree)
+                .event(event)
+                .address(address)
+                .name(request.name())
+                .build();
+
+        treeEventRepository.save(treeEvent);
+
+        log.debug("Created event with id {}", request);
+        // ===== 3. Gắn Person =====
+        PersonEvent personEvent = PersonEvent.builder()
+                .person(person)
+                .name(request.name())
+                .event(event)
+                .eventType(eventType)
+                .address(address)
+                .build();
+
+        personEventRepository.save(personEvent);
+
+        return buildEventResponse(event, List.of(personEvent));
     }
 }

@@ -3,6 +3,7 @@ package com.nckh.genealogy.controller;
 import com.nckh.genealogy.dto.request.event.AddPersonToEventRequest;
 import com.nckh.genealogy.dto.request.event.AddTreeEventRequest;
 import com.nckh.genealogy.dto.request.event.CreateEventRequest;
+import com.nckh.genealogy.dto.request.event.CreatePersonEventRequest;
 import com.nckh.genealogy.dto.response.ApiResponse;
 import com.nckh.genealogy.dto.response.event.EventResponse;
 import com.nckh.genealogy.service.EventService;
@@ -108,6 +109,19 @@ public class EventController {
         eventService.removePersonFromEvent(treeId, eventId, personId, userId);
 
         return ResponseEntity.ok(ApiResponse.noContent());
+    }
+
+    @PostMapping("/person-event")
+    public ResponseEntity<ApiResponse<EventResponse>> createPersonEvent(
+            @PathVariable UUID treeId,
+            @AuthenticationPrincipal UUID userId,
+            @Valid @RequestBody CreatePersonEventRequest request) {
+
+        return ResponseEntity.status(201).body(
+                ApiResponse.created(
+                        eventService.createPersonEvent(treeId, userId, request)
+                )
+        );
     }
 
     @Operation(
