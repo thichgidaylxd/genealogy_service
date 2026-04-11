@@ -21,7 +21,7 @@ public record EventResponse(
             UUID id,
             PersonResponse person,
             String eventType,
-            String roleInEvent,
+            String eventTypeDescription,
             AddressResponse address,
             String name
     ) {}

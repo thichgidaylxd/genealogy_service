@@ -11,13 +11,16 @@ import java.util.UUID;
 @Repository
 public interface PersonEventRepository extends JpaRepository<PersonEvent, UUID> {
 
-    @EntityGraph(attributePaths = {"person", "eventType", "roleInEvent", "address"})
+    @EntityGraph(attributePaths = {"person", "eventType", "address"})
     List<PersonEvent> findByEventId(UUID eventId);
 
-    @EntityGraph(attributePaths = {"event", "eventType", "roleInEvent", "address"})
+    @EntityGraph(attributePaths = {"event", "eventType", "address"})
     List<PersonEvent> findByPersonId(UUID personId);
 
     boolean existsByPersonIdAndEventId(UUID personId, UUID eventId);
 
     boolean existsByAddressId(UUID addressId);
+
+    boolean existsByPersonIdAndEventTypeId(UUID personId, UUID eventTypeId);
+
 }

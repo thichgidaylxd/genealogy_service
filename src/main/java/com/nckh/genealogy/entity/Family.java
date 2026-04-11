@@ -1,6 +1,5 @@
 package com.nckh.genealogy.entity;
 
-import com.nckh.genealogy.enums.UnionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -36,10 +35,6 @@ public class Family {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "parent2_id")
     private Person parent2;
-
-    @Enumerated(EnumType.ORDINAL)
-    @Column(name = "union_type", nullable = false)
-    private UnionType unionType;
 
     @Column(name = "from_date")
     private LocalDate fromDate;

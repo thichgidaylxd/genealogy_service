@@ -11,6 +11,8 @@ import java.util.UUID;
 @Repository
 public interface TreeMediaFileRepository extends JpaRepository<TreeMediaFile, UUID> {
 
-    @EntityGraph(attributePaths = {"mediaFile", "mediaFile.mediaFileType", "mediaFile.uploadedBy"})
+    @EntityGraph(attributePaths = {"mediaFile", "mediaFileType"})
     List<TreeMediaFile> findByTreeId(UUID treeId);
+
+    void deleteByTreeId(UUID treeId);
 }

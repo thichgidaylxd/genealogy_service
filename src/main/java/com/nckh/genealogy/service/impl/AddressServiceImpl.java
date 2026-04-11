@@ -12,12 +12,14 @@ import com.nckh.genealogy.mapper.AddressMapper;
 import com.nckh.genealogy.repository.*;
 import com.nckh.genealogy.service.AddressService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AddressServiceImpl implements AddressService {
@@ -133,7 +135,7 @@ public class AddressServiceImpl implements AddressService {
     @Override
     @Transactional
     public void removePersonAddress(UUID treeId, UUID personId, UUID addressId, UUID requesterId) {
-        requireTreeMember(requesterId, personId);
+        requireTreeMember(requesterId, treeId);
         PersonAddressId id = new PersonAddressId(personId, addressId);
         if (!personAddressRepository.existsById(id)) {
             throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
@@ -225,15 +227,15 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
-    public void removeTreeAddress(UUID treeId, UUID treeAddressId, UUID requesterId) {
+    public void removeTreeAddress(UUID treeId, UUID addressId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
-        TreeAddress treeAddress = treeAddressRepository.findById(treeAddressId)
+        TreeAddress treeAddress = treeAddressRepository.findByTreeIdAndAddressId(treeId,addressId)
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!treeAddress.getTree().getId().equals(treeId)) {
             throw new AppException(ErrorCode.ADDRESS_NOT_FOUND);
         }
-        treeAddressRepository.deleteById(treeAddressId);
+        treeAddressRepository.deleteByAddressId(addressId);
     }
 
     // ==================== Helpers ====================
@@ -254,7 +256,6 @@ public class AddressServiceImpl implements AddressService {
                 .country(request.country())
                 .latitude(request.latitude())
                 .longitude(request.longitude())
-                .placeId(request.placeId())
                 .build();
         return addressRepository.save(address);
     }
@@ -265,8 +266,9 @@ public class AddressServiceImpl implements AddressService {
     }
 
     private void requireTreeMember(UUID userId, UUID treeId) {
-        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatus(
-                userId, treeId, TreeMemberStatus.ACTIVE)) {
+        log.error("requireTreeMember: userId = {}, treeId = {}", userId, treeId);
+        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatusIsActive(
+                userId, treeId)) {
             throw new AppException(ErrorCode.TREE_ACCESS_DENIED);
         }
     }
@@ -297,8 +299,8 @@ public class AddressServiceImpl implements AddressService {
                 address.getCountry(),
                 address.getLatitude(),
                 address.getLongitude(),
-                address.getPlaceId(),
                 addressType.getName(),
+                addressType.getDescription(),
                 fromDate,
                 toDate,
                 isPrimary,

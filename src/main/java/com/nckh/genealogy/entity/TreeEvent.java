@@ -35,7 +35,7 @@ public class TreeEvent {
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id", nullable = false)
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @Column(name = "name", nullable = false, length = 100)

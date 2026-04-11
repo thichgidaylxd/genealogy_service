@@ -38,12 +38,9 @@ public class PersonEvent {
     @JoinColumn(name = "event_type_id", nullable = false)
     private EventType eventType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_in_event_id", nullable = false)
-    private RoleInEvent roleInEvent;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "address_id", nullable = false)
+    @JoinColumn(name = "address_id")
     private Address address;
 
     @Column(name = "name", nullable = false, length = 100)

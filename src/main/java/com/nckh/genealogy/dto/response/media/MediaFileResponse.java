@@ -8,5 +8,6 @@ public record MediaFileResponse(
         String fileName,
         Long fileSize,
         String mediaFileType,
+        String mediaFileTypeDescription,
         String description
 ) {}

@@ -25,7 +25,6 @@ public class EventServiceImpl implements EventService {
 
     private final EventRepository eventRepository;
     private final EventTypeRepository eventTypeRepository;
-    private final RoleInEventRepository roleInEventRepository;
     private final PersonEventRepository personEventRepository;
     private final TreeEventRepository treeEventRepository;
     private final TreeMemberRepository treeMemberRepository;
@@ -45,9 +44,12 @@ public class EventServiceImpl implements EventService {
 
         User creator = userRepository.findById(requesterId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        Address address = addressRepository.findById(treeEventRequest.addressId())
-                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+        Address address = null;
+        if(treeEventRequest.addressId() != null)
+        {
+            address = addressRepository.findById(treeEventRequest.addressId())
+                    .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
+        }
 
         Tree tree = treeRepository.findById(treeId)
                 .orElseThrow(() -> new AppException(ErrorCode.TREE_NOT_FOUND));
@@ -122,9 +124,6 @@ public class EventServiceImpl implements EventService {
         EventType eventType = eventTypeRepository.findById(request.eventTypeId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_TYPE_NOT_FOUND));
 
-        RoleInEvent roleInEvent = roleInEventRepository.findById(request.roleInEventId())
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_IN_EVENT_NOT_FOUND));
-
         Address address = addressRepository.findById(request.addressId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
 
@@ -132,7 +131,6 @@ public class EventServiceImpl implements EventService {
                 .person(person)
                 .event(event)
                 .eventType(eventType)
-                .roleInEvent(roleInEvent)
                 .address(address)
                 .name(request.name())
                 .build();
@@ -181,7 +179,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private void requireTreeMember(UUID userId, UUID treeId) {
-        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatus(userId, treeId, TreeMemberStatus.ACTIVE)) {
+        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatusIsActive(userId, treeId)) {
             throw new AppException(ErrorCode.TREE_ACCESS_DENIED);
         }
     }
@@ -192,7 +190,7 @@ public class EventServiceImpl implements EventService {
                 a.getId(), a.getFormattedAddress(), a.getAddressLine(),
                 a.getWard(), a.getDistrict(), a.getCity(), a.getProvince(),
                 a.getCountry(), a.getLatitude(), a.getLongitude(),
-                a.getPlaceId(), null, null, null, false, null
+                 null, null, null, null,false, null
         );
     }
 
@@ -202,7 +200,7 @@ public class EventServiceImpl implements EventService {
                         pe.getId(),
                         personMapper.toResponse(pe.getPerson()),
                         pe.getEventType().getName(),
-                        pe.getRoleInEvent().getName(),
+                        pe.getEventType().getDescription(),
                         toAddressResponse(pe.getAddress()),
                         pe.getName()
                 ))
@@ -211,11 +209,11 @@ public class EventServiceImpl implements EventService {
         return new EventResponse(
                 event.getId(),
                 event.getName(),
-                event.getDescription(),
+                event.getDescription() !=null ? event.getDescription() : null,
                 event.getStartedAt(),
                 event.getEndedAt(),
                 event.getStatus(),
-                event.getCreatedBy().getUserName(),
+                event.getCreatedBy() != null ? event.getCreatedBy().getUserName() : null,
                 participantResponses
         );
     }

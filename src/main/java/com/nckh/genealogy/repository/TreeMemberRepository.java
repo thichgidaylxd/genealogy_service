@@ -5,6 +5,7 @@ import com.nckh.genealogy.enums.TreeMemberRole;
 import com.nckh.genealogy.enums.TreeMemberStatus;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -28,5 +29,18 @@ public interface TreeMemberRepository extends JpaRepository<TreeMember, UUID> {
 
     boolean existsByUserIdAndTreeIdAndStatus(UUID userId, UUID treeId, TreeMemberStatus status);
 
+    @Query(value = """
+    SELECT EXISTS (
+        SELECT 1
+        FROM tree_members tm
+        WHERE tm.user_id = :userId
+          AND tm.tree_id = :treeId
+          AND tm.status = 1
+    )
+    """, nativeQuery = true)
+    boolean existsByUserIdAndTreeIdAndStatusIsActive(UUID userId, UUID treeId);
+
     long countByTreeIdAndStatus(UUID treeId, TreeMemberStatus status);
+
+    void deleteByTreeId(UUID treeId);
 }

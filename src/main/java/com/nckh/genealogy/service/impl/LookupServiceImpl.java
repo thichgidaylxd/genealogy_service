@@ -15,7 +15,6 @@ public class LookupServiceImpl implements LookupService {
 
     private final AddressTypeRepository addressTypeRepository;
     private final EventTypeRepository eventTypeRepository;
-    private final RoleInEventRepository roleInEventRepository;
     private final MediaFileTypeRepository mediaFileTypeRepository;
 
     @Override
@@ -34,13 +33,6 @@ public class LookupServiceImpl implements LookupService {
                 .toList();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<LookupResponse> getRoleInEvents() {
-        return roleInEventRepository.findAll().stream()
-                .map(r -> new LookupResponse(r.getId(), r.getName(), r.getDescription()))
-                .toList();
-    }
 
     @Override
     @Transactional(readOnly = true)

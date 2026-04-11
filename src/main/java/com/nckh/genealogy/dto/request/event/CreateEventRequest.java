@@ -9,7 +9,6 @@ public record CreateEventRequest(
         @NotBlank(message = "Tên sự kiện không được để trống")
         String name,
 
-        @NotBlank(message = "Mô tả không được để trống")
         String description,
 
         @NotNull(message = "Thời gian bắt đầu không được để trống")

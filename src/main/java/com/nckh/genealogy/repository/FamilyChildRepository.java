@@ -3,6 +3,7 @@ package com.nckh.genealogy.repository;
 import com.nckh.genealogy.entity.FamilyChild;
 import com.nckh.genealogy.entity.FamilyChildId;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,4 +33,13 @@ public interface FamilyChildRepository extends JpaRepository<FamilyChild, Family
             WHERE fc.family.id = :familyId
             """)
     List<FamilyChild> findChildrenByFamilyId(@Param("familyId") UUID familyId);
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM FamilyChild fc WHERE fc.person.id = :personId")
+    void deleteByPersonId(@Param("personId") UUID personId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM FamilyChild fc WHERE fc.id.familyId = :familyId")
+    void deleteByFamilyId(@Param("familyId") UUID familyId);
 }

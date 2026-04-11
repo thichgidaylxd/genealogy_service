@@ -89,8 +89,8 @@ public class InvitationServiceImpl implements InvitationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (treeMemberRepository.existsByUserIdAndTreeIdAndStatus(
-                userId, invitation.getTree().getId(), TreeMemberStatus.ACTIVE)) {
+        if (treeMemberRepository.existsByUserIdAndTreeIdAndStatusIsActive(
+                userId, invitation.getTree().getId())) {
             throw new AppException(ErrorCode.TREE_MEMBER_ALREADY_EXISTS);
         }
 

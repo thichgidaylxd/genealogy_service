@@ -153,13 +153,13 @@ public class AddressController {
             summary = "Xóa địa chỉ của Tree",
             description = "Xóa một địa chỉ đã được gắn với cây gia phả."
     )
-    @DeleteMapping("/api/v1/trees/{treeId}/addresses/{treeAddressId}")
+    @DeleteMapping("/api/v1/trees/{treeId}/addresses/{addressId}")
     public ResponseEntity<ApiResponse<Void>> removeTreeAddress(
             @PathVariable UUID treeId,
-            @PathVariable UUID treeAddressId,
+            @PathVariable UUID addressId,
             @AuthenticationPrincipal UUID userId) {
 
-        addressService.removeTreeAddress(treeId, treeAddressId, userId);
+        addressService.removeTreeAddress(treeId, addressId, userId);
 
         return ResponseEntity.ok(ApiResponse.noContent());
     }

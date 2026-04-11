@@ -57,4 +57,18 @@ public interface FamilyRepository extends JpaRepository<Family, UUID> {
             )
             """)
     List<Family> findAllByTreeId(@Param("treeId") UUID treeId);
+
+    @Query("""
+    SELECT f
+    FROM Family f
+    WHERE 
+        (
+            f.parent1.id = :personId AND f.parent2 IS NULL
+        )
+        OR
+        (
+            f.parent2.id = :personId AND f.parent1 IS NULL
+        )
+""")
+    List<Family> findSingleParentFamilies(UUID personId);
 }

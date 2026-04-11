@@ -25,30 +25,28 @@ public class Address {
     @Column(name = "formatted_address", nullable = false)
     private String formattedAddress;
 
-    @Column(name = "address_line", nullable = false)
+    @Column(name = "address_line")
     private String addressLine;
 
-    @Column(name = "ward", nullable = false, length = 100)
+    @Column(name = "ward", length = 100)
     private String ward;
 
-    @Column(name = "district", nullable = false, length = 100)
+    @Column(name = "district", length = 100)
     private String district;
 
-    @Column(name = "city", nullable = false, length = 100)
+    @Column(name = "city", length = 100)
     private String city;
 
-    @Column(name = "province", nullable = false, length = 100)
+    @Column(name = "province", length = 100)
     private String province;
 
-    @Column(name = "country", nullable = false, length = 50)
+    @Column(name = "country", length = 50)
     private String country;
 
-    @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "latitude", precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
-    @Column(name = "place_id", nullable = false)
-    private String placeId;
 }

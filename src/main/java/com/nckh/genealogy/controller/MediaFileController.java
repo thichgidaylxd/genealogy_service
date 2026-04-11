@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/trees/{treeId}")
 @RequiredArgsConstructor
 @Tag(name = "Media API", description = "Quản lý media file của tree và person")
-public class MediaFileController {
+public class    MediaFileController {
 
     private final MediaFileService mediaFileService;
 

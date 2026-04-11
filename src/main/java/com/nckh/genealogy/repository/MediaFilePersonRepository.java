@@ -13,4 +13,6 @@ public interface MediaFilePersonRepository extends JpaRepository<MediaFilePerson
 
     @EntityGraph(attributePaths = {"mediaFile", "mediaFileType"})
     List<MediaFilePerson> findByPersonId(UUID personId);
+
+    void deleteByMediaFileId(UUID mediaFileId);
 }

@@ -4,7 +4,9 @@ import com.nckh.genealogy.dto.request.person.CreatePersonRequest;
 import com.nckh.genealogy.dto.request.person.UpdatePersonRequest;
 import com.nckh.genealogy.dto.response.PageResponse;
 import com.nckh.genealogy.dto.response.person.PersonResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface PersonService {
@@ -13,4 +15,5 @@ public interface PersonService {
     PersonResponse updatePerson(UUID id, UpdatePersonRequest request);
     void deletePerson(UUID id);
     PageResponse<PersonResponse> searchPersons(String keyword, int page, int size);
+    PersonResponse uploadAvatar(UUID personId, MultipartFile file);
 }

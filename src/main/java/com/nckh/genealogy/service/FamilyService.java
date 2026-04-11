@@ -4,6 +4,7 @@ import com.nckh.genealogy.dto.request.family.AddChildRequest;
 import com.nckh.genealogy.dto.request.family.AddParentRequest;
 import com.nckh.genealogy.dto.request.family.AddSpouseRequest;
 import com.nckh.genealogy.dto.request.person.CreatePersonRequest;
+import com.nckh.genealogy.dto.response.family.CheckDeletableResponse;
 import com.nckh.genealogy.dto.response.family.FamilyResponse;
 import com.nckh.genealogy.dto.response.family.PersonFamilyResponse;
 import com.nckh.genealogy.dto.response.family.TreeGraphResponse;
@@ -37,4 +38,8 @@ public interface FamilyService {
     TreeGraphResponse getTreeGraphPublic(UUID treeId); // không cần requesterId
 
     PersonResponse addFirstPersonIntoTree(UUID treeId, UUID requesterId, CreatePersonRequest request);
+
+
+    CheckDeletableResponse checkDeletable(UUID treeId, UUID personId, UUID requesterId);
+    void hardDeletePerson(UUID treeId, UUID personId, UUID requesterId);
 }

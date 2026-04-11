@@ -2,6 +2,7 @@ package com.nckh.genealogy.service.impl;
 
 import com.nckh.genealogy.dto.response.media.MediaFileResponse;
 import com.nckh.genealogy.entity.*;
+import com.nckh.genealogy.enums.FileType;
 import com.nckh.genealogy.enums.TreeMemberStatus;
 import com.nckh.genealogy.exception.AppException;
 import com.nckh.genealogy.exception.ErrorCode;
@@ -50,7 +51,7 @@ public class MediaFileServiceImpl implements MediaFileService {
                 .build();
         treeMediaFileRepository.save(treeMediaFile);
 
-        return toResponse(mediaFile, mediaFileType.getName());
+        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription());
     }
 
     @Override
@@ -58,7 +59,7 @@ public class MediaFileServiceImpl implements MediaFileService {
     public List<MediaFileResponse> getTreeMediaFiles(UUID treeId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
         return treeMediaFileRepository.findByTreeId(treeId).stream()
-                .map(tm -> toResponse(tm.getMediaFile(), tm.getMediaFileType().getName()))
+                .map(tm -> toResponse(tm.getMediaFile(), tm.getMediaFileType().getName(), tm.getMediaFileType().getDescription()))
                 .toList();
     }
 
@@ -86,7 +87,7 @@ public class MediaFileServiceImpl implements MediaFileService {
                 .build();
         mediaFilePersonRepository.save(mediaFilePerson);
 
-        return toResponse(mediaFile, mediaFileType.getName());
+        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription());
     }
 
     @Override
@@ -94,7 +95,7 @@ public class MediaFileServiceImpl implements MediaFileService {
     public List<MediaFileResponse> getPersonMediaFiles(UUID treeId, UUID personId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
         return mediaFilePersonRepository.findByPersonId(personId).stream()
-                .map(mp -> toResponse(mp.getMediaFile(), mp.getMediaFileType().getName()))
+                .map(mp -> toResponse(mp.getMediaFile(), mp.getMediaFileType().getName(), mp.getMediaFileType().getDescription()))
                 .toList();
     }
 
@@ -110,6 +111,7 @@ public class MediaFileServiceImpl implements MediaFileService {
         String publicId = extractPublicId(mediaFile.getFileUrl());
         cloudinaryService.delete(publicId);
 
+        mediaFilePersonRepository.deleteByMediaFileId(mediaFileId);
         mediaFileRepository.deleteById(mediaFileId);
     }
 
@@ -118,7 +120,7 @@ public class MediaFileServiceImpl implements MediaFileService {
     private MediaFile saveMediaFile(String[] uploaded, MultipartFile file, String description) {
         // uploaded[0] = url, uploaded[1] = publicId (không lưu vào DB — parse lại từ URL khi cần)
         String contentType = file.getContentType() != null ? file.getContentType() : "application/octet-stream";
-        String fileType = resolveFileType(contentType);
+        FileType fileType = resolveFileType(contentType);
 
         MediaFile mediaFile = MediaFile.builder()
                 .fileUrl(uploaded[0])
@@ -136,14 +138,14 @@ public class MediaFileServiceImpl implements MediaFileService {
      * Map MIME type → file_type_enum value của PostgreSQL
      * (image / video / audio / document / other)
      */
-    private String resolveFileType(String mimeType) {
-        if (mimeType.startsWith("image/")) return "image";
-        if (mimeType.startsWith("video/")) return "video";
-        if (mimeType.startsWith("audio/")) return "audio";
+    private FileType resolveFileType(String mimeType) {
+        if (mimeType.startsWith("image/")) return FileType.image;
+        if (mimeType.startsWith("video/")) return FileType.video;
+        if (mimeType.startsWith("audio/")) return FileType.audio;
         if (mimeType.equals("application/pdf")
                 || mimeType.startsWith("application/msword")
-                || mimeType.startsWith("application/vnd")) return "document";
-        return "other";
+                || mimeType.startsWith("application/vnd")) return FileType.document;
+        return FileType.other;
     }
 
     /**
@@ -174,18 +176,19 @@ public class MediaFileServiceImpl implements MediaFileService {
     }
 
     private void requireTreeMember(UUID userId, UUID treeId) {
-        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatus(userId, treeId, TreeMemberStatus.ACTIVE)) {
+        if (!treeMemberRepository.existsByUserIdAndTreeIdAndStatusIsActive(userId, treeId)) {
             throw new AppException(ErrorCode.TREE_ACCESS_DENIED);
         }
     }
 
-    private MediaFileResponse toResponse(MediaFile mediaFile, String mediaFileTypeName) {
+    private MediaFileResponse toResponse(MediaFile mediaFile, String mediaFileTypeName, String mediaFileTypeDescription) {
         return new MediaFileResponse(
                 mediaFile.getId(),
                 mediaFile.getFileUrl(),
                 mediaFile.getFileName(),
                 mediaFile.getFileSize(),
-                mediaFileTypeName,
+                mediaFile.getFileType().name(),
+                mediaFileTypeDescription,
                 mediaFile.getDescription()
         );
     }

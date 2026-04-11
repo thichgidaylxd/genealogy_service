@@ -12,10 +12,7 @@ import com.nckh.genealogy.enums.TreeMemberStatus;
 import com.nckh.genealogy.exception.AppException;
 import com.nckh.genealogy.exception.ErrorCode;
 import com.nckh.genealogy.mapper.TreeMapper;
-import com.nckh.genealogy.repository.TreeMemberRepository;
-import com.nckh.genealogy.repository.TreePersonRepository;
-import com.nckh.genealogy.repository.TreeRepository;
-import com.nckh.genealogy.repository.UserRepository;
+import com.nckh.genealogy.repository.*;
 import com.nckh.genealogy.service.TreeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +32,9 @@ public class TreeServiceImpl implements TreeService {
     private final TreePersonRepository treePersonRepository;
     private final UserRepository userRepository;
     private final TreeMapper treeMapper;
+
+    private final TreeMediaFileRepository treeMediaFileRepository;
+    private final TreeEventRepository treeEventRepository;
 
     @Override
     @Transactional
@@ -104,17 +104,22 @@ public class TreeServiceImpl implements TreeService {
         return buildTreeResponse(tree, member.getRole(), totalMembers, totalPersons);
     }
 
-    @Override
     @Transactional
     public void deleteTree(UUID treeId, UUID userId) {
         findTreeById(treeId);
         TreeMember member = findActiveMember(userId, treeId);
 
-        // Chỉ OWNER mới được xóa tree
         if (member.getRole() != TreeMemberRole.OWNER) {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
+        // Xóa dependent tables trước
+        treeMemberRepository.deleteByTreeId(treeId);
+        treePersonRepository.deleteByTreeId(treeId);
+        treeMediaFileRepository.deleteByTreeId(treeId);
+        treeEventRepository.deleteByTreeId(treeId);
+
+        // Cuối cùng
         treeRepository.deleteById(treeId);
     }
 

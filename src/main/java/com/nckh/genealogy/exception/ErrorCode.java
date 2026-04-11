@@ -55,7 +55,6 @@ public enum ErrorCode {
     // ==================== EVENT ====================
     EVENT_NOT_FOUND(404, "Không tìm thấy sự kiện", HttpStatus.NOT_FOUND),
     EVENT_TYPE_NOT_FOUND(404, "Không tìm thấy loại sự kiện", HttpStatus.NOT_FOUND),
-    ROLE_IN_EVENT_NOT_FOUND(404, "Không tìm thấy vai trò trong sự kiện", HttpStatus.NOT_FOUND),
 
     // ==================== MEDIA ====================
     MEDIA_FILE_NOT_FOUND(404, "Không tìm thấy tệp media", HttpStatus.NOT_FOUND),

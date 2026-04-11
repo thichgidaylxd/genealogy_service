@@ -1,7 +1,6 @@
 package com.nckh.genealogy.dto.request.family;
 
 import com.nckh.genealogy.enums.Gender;
-import com.nckh.genealogy.enums.UnionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,7 +25,6 @@ public record AddParentRequest(
         String avatarUrl,
 
         // Thông tin quan hệ với partner còn lại (nếu có)
-        UnionType unionType,
         LocalDate fromDate,
         LocalDate toDate
 ) {}

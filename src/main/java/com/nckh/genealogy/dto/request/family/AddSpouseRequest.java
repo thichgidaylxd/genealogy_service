@@ -1,7 +1,6 @@
 package com.nckh.genealogy.dto.request.family;
 
 import com.nckh.genealogy.enums.Gender;
-import com.nckh.genealogy.enums.UnionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -24,10 +23,6 @@ public record AddSpouseRequest(
         LocalDateTime dateOfDeath,
         String citizenIdentificationNumber,
         String avatarUrl,
-
-        // Thông tin quan hệ
-        @NotNull(message = "Loại quan hệ không được để trống")
-        UnionType unionType,
 
         LocalDate fromDate,
         LocalDate toDate

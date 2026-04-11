@@ -4,7 +4,9 @@ import com.nckh.genealogy.dto.request.person.CreatePersonRequest;
 import com.nckh.genealogy.dto.request.person.UpdatePersonRequest;
 import com.nckh.genealogy.dto.response.ApiResponse;
 import com.nckh.genealogy.dto.response.PageResponse;
+import com.nckh.genealogy.dto.response.family.CheckDeletableResponse;
 import com.nckh.genealogy.dto.response.person.PersonResponse;
+import com.nckh.genealogy.service.FamilyService;
 import com.nckh.genealogy.service.PersonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,23 +14,27 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/persons")
+@RequestMapping
 @RequiredArgsConstructor
 @Tag(name = "Person API", description = "Quản lý thông tin nhân vật trong hệ thống gia phả")
 public class PersonController {
 
     private final PersonService personService;
+    private final FamilyService familyService;
+
 
     @Operation(
             summary = "Tạo nhân vật mới",
             description = "Tạo một person mới trong hệ thống."
     )
-    @PostMapping
+    @PostMapping("/api/v1/persons")
     public ResponseEntity<ApiResponse<PersonResponse>> createPerson(
             @Valid @RequestBody CreatePersonRequest request) {
 
@@ -40,7 +46,7 @@ public class PersonController {
             summary = "Lấy thông tin person",
             description = "Trả về thông tin chi tiết của một person."
     )
-    @GetMapping("/{id}")
+    @GetMapping("/api/v1/persons/{id}")
     public ResponseEntity<ApiResponse<PersonResponse>> getPersonById(
             @Parameter(description = "ID của person")
             @PathVariable UUID id) {
@@ -54,7 +60,7 @@ public class PersonController {
             summary = "Cập nhật person",
             description = "Cập nhật thông tin của một person."
     )
-    @PutMapping("/{id}")
+    @PutMapping("/api/v1/persons/{id}")
     public ResponseEntity<ApiResponse<PersonResponse>> updatePerson(
             @Parameter(description = "ID của person")
             @PathVariable UUID id,
@@ -72,7 +78,7 @@ public class PersonController {
             summary = "Xóa person",
             description = "Soft delete một person khỏi hệ thống."
     )
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/v1/persons/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePerson(
             @Parameter(description = "ID của person")
             @PathVariable UUID id) {
@@ -86,7 +92,7 @@ public class PersonController {
             summary = "Tìm kiếm person",
             description = "Tìm kiếm person theo keyword và hỗ trợ phân trang."
     )
-    @GetMapping
+    @GetMapping("/api/v1/persons")
     public ResponseEntity<ApiResponse<PageResponse<PersonResponse>>> searchPersons(
             @Parameter(description = "Từ khóa tìm kiếm theo tên")
             @RequestParam(required = false) String keyword,
@@ -103,4 +109,45 @@ public class PersonController {
                 )
         );
     }
+
+    @Operation(
+            summary = "Kiểm tra có thể xóa person không",
+            description = "Kiểm tra xem việc xóa person có phá vỡ cấu trúc cây gia phả không."
+    )
+    @GetMapping("/api/v1/trees/{treeId}/persons/{personId}/deletable")
+    public ResponseEntity<ApiResponse<CheckDeletableResponse>> checkDeletable(
+            @PathVariable UUID treeId,
+            @PathVariable UUID personId,
+            @AuthenticationPrincipal UUID userId) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        familyService.checkDeletable(treeId, personId, userId)
+                )
+        );
+    }
+
+    @Operation(
+            summary = "Xóa person (hard delete)",
+            description = "Xóa hoàn toàn person và tất cả quan hệ gia đình liên quan."
+    )
+    @DeleteMapping("/api/v1/trees/{treeId}/persons/{personId}")
+    public ResponseEntity<ApiResponse<Void>> hardDeletePerson(
+            @PathVariable UUID treeId,
+            @PathVariable UUID personId,
+            @AuthenticationPrincipal UUID userId) {
+
+        familyService.hardDeletePerson(treeId, personId, userId);
+        return ResponseEntity.ok(ApiResponse.noContent());
+    }
+
+    @PatchMapping("/api/v1/persons/{personId}/upload-avatar")
+    public ResponseEntity<ApiResponse<PersonResponse>> uploadAvatar(
+            @PathVariable("personId") UUID personId,
+            @RequestPart("file") MultipartFile file
+    )
+    {
+        return ResponseEntity.ok(ApiResponse.success(personService.uploadAvatar(personId, file)));
+    }
+
 }

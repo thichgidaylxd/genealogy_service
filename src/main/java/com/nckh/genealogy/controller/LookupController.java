@@ -45,18 +45,6 @@ public class LookupController {
         );
     }
 
-    @Operation(
-            summary = "Lấy danh sách vai trò trong sự kiện",
-            description = "Trả về danh sách role của person trong event (BRIDE, GROOM, CHILD...)."
-    )
-    @GetMapping("/role-in-events")
-    public ResponseEntity<ApiResponse<List<LookupResponse>>> getRoleInEvents() {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        lookupService.getRoleInEvents()
-                )
-        );
-    }
 
     @Operation(
             summary = "Lấy danh sách loại media file",

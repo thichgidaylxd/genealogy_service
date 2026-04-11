@@ -1,7 +1,6 @@
 package com.nckh.genealogy.dto.response.family;
 
 import com.nckh.genealogy.enums.Gender;
-import com.nckh.genealogy.enums.UnionType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,7 +30,6 @@ public record TreeGraphResponse(
             UUID id,
             UUID parent1Id,
             UUID parent2Id,       // nullable
-            UnionType unionType,
             List<UUID> childrenIds
     ) {}
 
