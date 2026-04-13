@@ -67,30 +67,31 @@ public class InvitationServiceImpl implements InvitationService {
                 .build();
         treeInvitationRepository.save(invitation);
 
-        String inviteUrl = frontendUrl + "/invite/accept?token=" + token;
+        String inviteUrl = frontendUrl + "/accept-invitation?token=" + token;
         log.info("Invitation URL for {}: {}", request.email(), inviteUrl);
     }
 
     @Override
     @Transactional
-    public void acceptInvitation(String token, UUID userId) {
+    public void acceptInvitation(String token) {
         TreeInvitation invitation = treeInvitationRepository.findByInviteToken(token)
                 .orElseThrow(() -> new AppException(ErrorCode.TREE_INVITATION_NOT_FOUND));
 
         if (invitation.getStatus() != InvitationStatus.PENDING) {
             throw new AppException(ErrorCode.TREE_INVITATION_ALREADY_USED);
         }
+
         if (LocalDateTime.now().isAfter(invitation.getExpiresAt())) {
             invitation.setStatus(InvitationStatus.EXPIRED);
             treeInvitationRepository.save(invitation);
             throw new AppException(ErrorCode.TREE_INVITATION_EXPIRED);
         }
 
-        User user = userRepository.findById(userId)
+        User user =userRepository.findByEmail(invitation.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (treeMemberRepository.existsByUserIdAndTreeIdAndStatusIsActive(
-                userId, invitation.getTree().getId())) {
+                user.getId(), invitation.getTree().getId())) {
             throw new AppException(ErrorCode.TREE_MEMBER_ALREADY_EXISTS);
         }
 
@@ -188,7 +189,7 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     private ShareLinkResponse toShareLinkResponse(TreeShareLink shareLink) {
-        String shareUrl = frontendUrl + "/share?token=" + shareLink.getShareToken();
+        String shareUrl = frontendUrl + "/family-tree-share?token=" + shareLink.getShareToken();
         return new ShareLinkResponse(
                 shareLink.getId(),
                 shareUrl,

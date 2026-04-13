@@ -74,7 +74,9 @@ public enum ErrorCode {
     NOTIFICATION_NOT_FOUND(404, "Không tìm thấy thông báo", HttpStatus.NOT_FOUND),
 
     // ==================== ROLE ====================
-    ROLE_NOT_FOUND(404, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND);
+    ROLE_NOT_FOUND(404, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    ALBUM_ALREADY_EXISTS(409,"Tên Album đã có" , HttpStatus.CONFLICT),
+    ALBUM_NOT_FOUND(404,"Không tìm thấy album" , HttpStatus.NOT_FOUND );
 
     private final int code;
     private final String message;

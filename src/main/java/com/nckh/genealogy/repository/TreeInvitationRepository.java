@@ -14,4 +14,6 @@ public interface TreeInvitationRepository extends JpaRepository<TreeInvitation, 
     Optional<TreeInvitation> findByInviteToken(String inviteToken);
 
     boolean existsByTreeIdAndEmailAndStatus(UUID treeId, String email, InvitationStatus status);
+
+    void deleteByTreeId(UUID treeId);
 }

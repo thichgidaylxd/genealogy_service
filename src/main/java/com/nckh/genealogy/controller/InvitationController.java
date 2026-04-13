@@ -50,10 +50,9 @@ public class InvitationController {
     @PostMapping("/api/v1/invitations/accept")
     public ResponseEntity<ApiResponse<Void>> acceptInvitation(
             @Parameter(description = "Invitation token", example = "abc123")
-            @RequestParam String token,
-            @AuthenticationPrincipal UUID userId) {
+            @RequestParam String token) {
 
-        invitationService.acceptInvitation(token, userId);
+        invitationService.acceptInvitation(token);
         return ResponseEntity.ok(ApiResponse.noContent());
     }
 

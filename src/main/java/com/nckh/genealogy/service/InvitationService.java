@@ -13,7 +13,7 @@ public interface InvitationService {
     void sendInvitation(UUID treeId, UUID requesterId, SendInvitationRequest request);
 
     // Chấp nhận lời mời (người được mời click link trong email)
-    void acceptInvitation(String token, UUID userId);
+    void acceptInvitation(String token);
 
     // Tạo share link
     ShareLinkResponse createShareLink(UUID treeId, UUID requesterId, CreateShareLinkRequest request);

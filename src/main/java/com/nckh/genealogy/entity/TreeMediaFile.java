@@ -39,6 +39,10 @@ public class TreeMediaFile {
     @JoinColumn(name = "media_file_type_id", nullable = false)
     private MediaFileType mediaFileType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "album_id", nullable = false)  // NOT NULL
+    private Album album;
+
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 

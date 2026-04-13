@@ -1,5 +1,6 @@
 package com.nckh.genealogy.repository;
 
+import com.nckh.genealogy.entity.Album;
 import com.nckh.genealogy.entity.TreeMediaFile;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,11 @@ public interface TreeMediaFileRepository extends JpaRepository<TreeMediaFile, UU
 
     @EntityGraph(attributePaths = {"mediaFile", "mediaFileType"})
     List<TreeMediaFile> findByTreeId(UUID treeId);
+    List<TreeMediaFile> findByTreeIdAndAlbumId(UUID treeId, UUID albumId);
 
     void deleteByTreeId(UUID treeId);
+
+    Integer countByAlbum(Album a);
+
+    void deleteByAlbumId(UUID albumId);
 }

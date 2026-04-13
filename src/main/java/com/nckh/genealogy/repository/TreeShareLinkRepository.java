@@ -24,4 +24,6 @@ public interface TreeShareLinkRepository extends JpaRepository<TreeShareLink, UU
             """)
     List<TreeShareLink> findActiveByTreeId(@Param("treeId") UUID treeId,
                                            @Param("now") LocalDateTime now);
+
+    void deleteByTreeId(UUID treeId);
 }

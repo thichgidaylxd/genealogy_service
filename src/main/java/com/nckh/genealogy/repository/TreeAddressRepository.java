@@ -20,4 +20,6 @@ public interface TreeAddressRepository extends JpaRepository<TreeAddress, UUID> 
     Optional<TreeAddress> findByTreeIdAndAddressId(UUID treeId, UUID treeAddressId);
 
     void deleteByAddressId(UUID addressId);
+
+    void deleteByTreeId(UUID treeId);
 }

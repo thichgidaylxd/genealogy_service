@@ -29,13 +29,23 @@ public class MediaFileServiceImpl implements MediaFileService {
     private final TreeMemberRepository treeMemberRepository;
     private final TreePersonRepository treePersonRepository;
     private final PersonRepository personRepository;
+    private final AlbumRepository albumRepository;
 
     @Override
     @Transactional
     public MediaFileResponse uploadToTree(UUID treeId, UUID requesterId, MultipartFile file,
-                                          UUID mediaFileTypeId, String description) {
+                                          UUID mediaFileTypeId, String description, UUID albumId) {
         requireTreeMember(requesterId, treeId);
         MediaFileType mediaFileType = findMediaFileType(mediaFileTypeId);
+
+        // albumId bắt buộc
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new AppException(ErrorCode.ALBUM_NOT_FOUND));
+
+        // Kiểm tra album thuộc đúng tree
+        if (!album.getTree().getId().equals(treeId)) {
+            throw new AppException(ErrorCode.ALBUM_NOT_FOUND);
+        }
 
         String[] uploaded = cloudinaryService.upload(file, "genealogy/trees/" + treeId);
         MediaFile mediaFile = saveMediaFile(uploaded, file, description);
@@ -47,19 +57,31 @@ public class MediaFileServiceImpl implements MediaFileService {
                 .tree(tree)
                 .mediaFile(mediaFile)
                 .mediaFileType(mediaFileType)
+                .album(album)
                 .description(description != null ? description : "")
                 .build();
         treeMediaFileRepository.save(treeMediaFile);
 
-        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription());
+        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription(), album);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<MediaFileResponse> getTreeMediaFiles(UUID treeId, UUID requesterId) {
+    public List<MediaFileResponse> getTreeMediaFiles(UUID treeId, UUID requesterId, UUID albumId) {
         requireTreeMember(requesterId, treeId);
-        return treeMediaFileRepository.findByTreeId(treeId).stream()
-                .map(tm -> toResponse(tm.getMediaFile(), tm.getMediaFileType().getName(), tm.getMediaFileType().getDescription()))
+
+        // albumId bắt buộc — validate album thuộc tree
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new AppException(ErrorCode.ALBUM_NOT_FOUND));
+        if (!album.getTree().getId().equals(treeId)) {
+            throw new AppException(ErrorCode.ALBUM_NOT_FOUND);
+        }
+
+        return treeMediaFileRepository.findByTreeIdAndAlbumId(treeId, albumId).stream()
+                .map(tm -> toResponse(tm.getMediaFile(),
+                        tm.getMediaFileType().getName(),
+                        tm.getMediaFileType().getDescription(),
+                        tm.getAlbum()))
                 .toList();
     }
 
@@ -87,7 +109,7 @@ public class MediaFileServiceImpl implements MediaFileService {
                 .build();
         mediaFilePersonRepository.save(mediaFilePerson);
 
-        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription());
+        return toResponse(mediaFile, mediaFileType.getName(), mediaFileType.getDescription(), null);
     }
 
     @Override
@@ -95,7 +117,7 @@ public class MediaFileServiceImpl implements MediaFileService {
     public List<MediaFileResponse> getPersonMediaFiles(UUID treeId, UUID personId, UUID requesterId) {
         requireTreeMember(requesterId, treeId);
         return mediaFilePersonRepository.findByPersonId(personId).stream()
-                .map(mp -> toResponse(mp.getMediaFile(), mp.getMediaFileType().getName(), mp.getMediaFileType().getDescription()))
+                .map(mp -> toResponse(mp.getMediaFile(), mp.getMediaFileType().getName(), mp.getMediaFileType().getDescription(),null))
                 .toList();
     }
 
@@ -181,15 +203,16 @@ public class MediaFileServiceImpl implements MediaFileService {
         }
     }
 
-    private MediaFileResponse toResponse(MediaFile mediaFile, String mediaFileTypeName, String mediaFileTypeDescription) {
+    private MediaFileResponse toResponse(MediaFile mediaFile, String typeName, String typeDesc, Album album) {
         return new MediaFileResponse(
                 mediaFile.getId(),
                 mediaFile.getFileUrl(),
                 mediaFile.getFileName(),
                 mediaFile.getFileSize(),
-                mediaFile.getFileType().name(),
-                mediaFileTypeDescription,
-                mediaFile.getDescription()
+                typeName,
+                typeDesc,
+                mediaFile.getDescription(),
+                album != null? album.getId() : null
         );
     }
 }

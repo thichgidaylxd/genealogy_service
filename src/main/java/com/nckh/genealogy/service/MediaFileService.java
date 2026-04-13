@@ -9,9 +9,10 @@ import java.util.UUID;
 public interface MediaFileService {
     // Upload cho tree
     MediaFileResponse uploadToTree(UUID treeId, UUID requesterId, MultipartFile file,
-                                   UUID mediaFileTypeId, String description);
-    List<MediaFileResponse> getTreeMediaFiles(UUID treeId, UUID requesterId);
+                                   UUID mediaFileTypeId, String description, UUID albumId);
 
+    List<MediaFileResponse> getTreeMediaFiles(UUID treeId, UUID requesterId, UUID albumId);
+    
     // Upload cho person
     MediaFileResponse uploadToPerson(UUID treeId, UUID personId, UUID requesterId,
                                      MultipartFile file, UUID mediaFileTypeId, String description);

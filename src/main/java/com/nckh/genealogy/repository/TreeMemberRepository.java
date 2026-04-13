@@ -27,7 +27,6 @@ public interface TreeMemberRepository extends JpaRepository<TreeMember, UUID> {
     @EntityGraph(attributePaths = {"user", "tree"})
     Optional<TreeMember> findByUserIdAndTreeIdAndStatus(UUID userId, UUID treeId, TreeMemberStatus status);
 
-    boolean existsByUserIdAndTreeIdAndStatus(UUID userId, UUID treeId, TreeMemberStatus status);
 
     @Query(value = """
     SELECT EXISTS (

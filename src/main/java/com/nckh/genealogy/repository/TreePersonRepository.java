@@ -13,7 +13,9 @@ import java.util.UUID;
 @Repository
 public interface TreePersonRepository extends JpaRepository<TreePerson, UUID> {
     long countByTreeIdAndDeletedAtIsNull(UUID treeId);
+
     boolean existsByTreeIdAndPersonIdAndDeletedAtIsNull(UUID treeId, UUID personId);
+
     List<TreePerson> findByTreeIdAndDeletedAtIsNull(UUID treeId);
 
     void deleteByTreeId(UUID treeId);

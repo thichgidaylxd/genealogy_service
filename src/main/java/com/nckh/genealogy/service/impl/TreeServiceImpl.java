@@ -36,6 +36,12 @@ public class TreeServiceImpl implements TreeService {
     private final TreeMediaFileRepository treeMediaFileRepository;
     private final TreeEventRepository treeEventRepository;
 
+    private final TreeInvitationRepository treeInvitationRepository;
+    private final TreeAddressRepository treeAddressRepository;
+
+    private final TreeShareLinkRepository treeShareLinkRepository;
+
+    private final AlbumRepository albumRepository;
     @Override
     @Transactional
     public TreeResponse createTree(UUID userId, CreateTreeRequest request) {
@@ -113,13 +119,33 @@ public class TreeServiceImpl implements TreeService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        // Xóa dependent tables trước
+        // ─── DELETE THEO THỨ TỰ FK (QUAN TRỌNG) ───
+
+        // Invitations
+        treeInvitationRepository.deleteByTreeId(treeId);
+
+        // Share links
+        treeShareLinkRepository.deleteByTreeId(treeId);
+
+        // Members
         treeMemberRepository.deleteByTreeId(treeId);
-        treePersonRepository.deleteByTreeId(treeId);
+
+
+        // Media
         treeMediaFileRepository.deleteByTreeId(treeId);
+
+        albumRepository.deleteByTreeId(treeId);
+
+        // Events
         treeEventRepository.deleteByTreeId(treeId);
 
-        // Cuối cùng
+        // Persons in tree
+        treePersonRepository.deleteByTreeId(treeId);
+
+        // Address (nếu có)
+        treeAddressRepository.deleteByTreeId(treeId);
+
+        // Cuối cùng mới delete tree
         treeRepository.deleteById(treeId);
     }
 

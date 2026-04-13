@@ -34,32 +34,27 @@ public class    MediaFileController {
     public ResponseEntity<ApiResponse<MediaFileResponse>> uploadToTree(
             @PathVariable UUID treeId,
             @AuthenticationPrincipal UUID userId,
-            @Parameter(description = "File upload", required = true)
             @RequestPart("file") MultipartFile file,
-            @Parameter(description = "ID loại media file")
             @RequestParam UUID mediaFileTypeId,
-            @Parameter(description = "Mô tả file")
+            @RequestParam UUID albumId,                    // bắt buộc
             @RequestParam(required = false) String description) {
 
         return ResponseEntity.status(201).body(
                 ApiResponse.created(
-                        mediaFileService.uploadToTree(treeId, userId, file, mediaFileTypeId, description)
+                        mediaFileService.uploadToTree(treeId, userId, file, mediaFileTypeId, description, albumId)
                 )
         );
     }
 
-    @Operation(
-            summary = "Lấy danh sách media của tree",
-            description = "Trả về tất cả media file thuộc một tree."
-    )
     @GetMapping("/media")
     public ResponseEntity<ApiResponse<List<MediaFileResponse>>> getTreeMediaFiles(
             @PathVariable UUID treeId,
-            @AuthenticationPrincipal UUID userId) {
+            @AuthenticationPrincipal UUID userId,
+            @RequestParam UUID albumId) {                  // bắt buộc
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        mediaFileService.getTreeMediaFiles(treeId, userId)
+                        mediaFileService.getTreeMediaFiles(treeId, userId, albumId)
                 )
         );
     }

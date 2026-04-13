@@ -9,5 +9,6 @@ public record MediaFileResponse(
         Long fileSize,
         String mediaFileType,
         String mediaFileTypeDescription,
-        String description
+        String description,
+        UUID albumId
 ) {}
