@@ -38,6 +38,8 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final PersonMapper personMapper;
 
+    private final FundRepository fundRepository;
+
     @Override
     @Transactional
     public EventResponse createEvent(UUID treeId, UUID requesterId,
@@ -161,11 +163,15 @@ public class EventServiceImpl implements EventService {
         requireTreeMember(requesterId, treeId);
         findEventInTree(eventId, treeId);
 
+        treeEventRepository.findByEventId(eventId)
+                .ifPresent(x ->fundRepository.deleteByTreeEvent_Id(x.getId()));
+
         treeEventRepository.findByTreeIdAndEventId(treeId, eventId)
                 .ifPresent(treeEventRepository::delete);
 
         personEventRepository.findByEventId(eventId)
                         .forEach(personEventRepository::delete);
+
 
         eventRepository.deleteById(eventId);
     }

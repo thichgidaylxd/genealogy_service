@@ -22,4 +22,6 @@ public interface PersonAddressRepository extends JpaRepository<PersonAddress, Pe
     boolean existsByPersonIdAndIsPrimary(UUID personId, Short isPrimary);
 
     boolean existsByAddressId(UUID addressId);
+
+    void deleteByPersonIdIn(List<UUID> personIds);
 }

@@ -3,6 +3,18 @@ spring:
   application:
     name: genealogy
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: lxd0294@gmail.com
+    password: garx eggl fock qcad
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   servlet:
     multipart:
       max-file-size: 20MB
@@ -53,6 +65,7 @@ app:
     cloud-name: ${CLOUDINARY_CLOUD_NAME}     # thêm
     api-key: ${CLOUDINARY_API_KEY}           # thêm
     api-secret: ${CLOUDINARY_API_SECRET}     # thêm
+
 
 server:
   port: 8080

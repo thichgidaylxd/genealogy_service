@@ -14,6 +14,8 @@ import com.nckh.genealogy.service.InvitationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,8 @@ public class InvitationServiceImpl implements InvitationService {
     private final TreeRepository treeRepository;
     private final TreeMemberRepository treeMemberRepository;
     private final UserRepository userRepository;
+
+    private final JavaMailSender mailSender;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -68,6 +72,27 @@ public class InvitationServiceImpl implements InvitationService {
         treeInvitationRepository.save(invitation);
 
         String inviteUrl = frontendUrl + "/accept-invitation?token=" + token;
+        log.info("Invitation URL for {}: {}", request.email(), inviteUrl);
+
+// ─── SEND MAIL HARD CODE ───
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(request.email());
+            message.setSubject("Lời mời tham gia gia phả");
+
+            message.setText(
+                    "Bạn được mời tham gia gia phả: " + tree.getName() + "\n\n" +
+                            "Người mời: " + inviter.getFullName() + "\n\n" +
+                            "Bấm vào link để tham gia:\n" +
+                            inviteUrl + "\n\n" +
+                            "Link sẽ hết hạn sau " + INVITATION_EXPIRY_DAYS + " ngày."
+            );
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            log.error("Send mail failed", e);
+        }
         log.info("Invitation URL for {}: {}", request.email(), inviteUrl);
     }
 

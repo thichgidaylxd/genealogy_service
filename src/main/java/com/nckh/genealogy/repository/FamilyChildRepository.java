@@ -42,4 +42,8 @@ public interface FamilyChildRepository extends JpaRepository<FamilyChild, Family
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM FamilyChild fc WHERE fc.id.familyId = :familyId")
     void deleteByFamilyId(@Param("familyId") UUID familyId);
+
+    @Modifying
+    @Query("delete from FamilyChild fc where fc.person.id in :ids")
+    void deleteByPersonIdIn(List<UUID> ids);
 }

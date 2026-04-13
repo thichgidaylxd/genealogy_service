@@ -1,6 +1,7 @@
 package com.nckh.genealogy.repository;
 
 import com.nckh.genealogy.entity.TreeEvent;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +18,6 @@ public interface TreeEventRepository extends JpaRepository<TreeEvent, UUID> {
     boolean existsByAddressId(UUID addressId);
 
     void deleteByTreeId(UUID treeId);
+
+    Optional<TreeEvent> findByEventId(@NotNull UUID eventId);
 }

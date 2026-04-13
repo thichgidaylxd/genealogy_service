@@ -15,4 +15,6 @@ public interface MediaFilePersonRepository extends JpaRepository<MediaFilePerson
     List<MediaFilePerson> findByPersonId(UUID personId);
 
     void deleteByMediaFileId(UUID mediaFileId);
+
+    void deleteByPersonIdIn(List<UUID> personIds);
 }

@@ -2,6 +2,7 @@ package com.nckh.genealogy.repository;
 
 import com.nckh.genealogy.entity.Family;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -71,4 +72,43 @@ public interface FamilyRepository extends JpaRepository<Family, UUID> {
         )
 """)
     List<Family> findSingleParentFamilies(UUID personId);
+
+    @Modifying
+    @Query("delete from Family f where f.parent1.id in :ids or f.parent2.id in :ids")
+    void deleteByParentIdIn(List<UUID> ids);
+
+
+    // Trong FamilyRepository.java
+
+    @Query("""
+    SELECT f.id, f.parent1.id, f.parent2.id
+    FROM Family f
+    WHERE
+        f.parent1.id IN (
+            SELECT tp.person.id 
+            FROM TreePerson tp 
+            WHERE tp.tree.id = :treeId
+        )
+        OR
+        f.parent2.id IN (
+            SELECT tp.person.id 
+            FROM TreePerson tp 
+            WHERE tp.tree.id = :treeId
+        )
+        OR
+        EXISTS (
+            SELECT 1
+            FROM FamilyChild fc
+            WHERE fc.family = f
+              AND fc.person.id IN (
+                  SELECT tp.person.id 
+                  FROM TreePerson tp 
+                  WHERE tp.tree.id = :treeId
+              )
+        )
+""")
+    List<Object[]> findFamiliesInTree(@Param("treeId") UUID treeId);
+
+    @Query("SELECT fc.person.id FROM FamilyChild fc WHERE fc.family.id = :familyId")
+    List<UUID> findChildrenIdsByFamilyId(@Param("familyId") UUID familyId);
 }

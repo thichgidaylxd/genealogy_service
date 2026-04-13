@@ -42,6 +42,15 @@ public class TreeServiceImpl implements TreeService {
     private final TreeShareLinkRepository treeShareLinkRepository;
 
     private final AlbumRepository albumRepository;
+
+    private final MediaFilePersonRepository mediaFilePersonRepository;
+    private final PersonEventRepository personEventRepository;
+    private final PersonAddressRepository personAddressRepository;
+    private final FamilyChildRepository familyChildrenRepository;
+    private final FamilyRepository familyRepository;
+    private final PersonRepository personRepository;
+
+
     @Override
     @Transactional
     public TreeResponse createTree(UUID userId, CreateTreeRequest request) {
@@ -119,33 +128,48 @@ public class TreeServiceImpl implements TreeService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        // ─── DELETE THEO THỨ TỰ FK (QUAN TRỌNG) ───
-
-        // Invitations
+        // ─── TREE LEVEL ───
         treeInvitationRepository.deleteByTreeId(treeId);
-
-        // Share links
         treeShareLinkRepository.deleteByTreeId(treeId);
-
-        // Members
         treeMemberRepository.deleteByTreeId(treeId);
-
-
-        // Media
         treeMediaFileRepository.deleteByTreeId(treeId);
-
+        treeEventRepository.deleteByTreeId(treeId);
+        treeAddressRepository.deleteByTreeId(treeId);
         albumRepository.deleteByTreeId(treeId);
 
-        // Events
-        treeEventRepository.deleteByTreeId(treeId);
+        // ─── LẤY DANH SÁCH PERSON TRONG TREE ───
+        List<UUID> personIds = treePersonRepository.findPersonIdsByTreeId(treeId);
 
-        // Persons in tree
-        treePersonRepository.deleteByTreeId(treeId);
+        if (!personIds.isEmpty()) {
 
-        // Address (nếu có)
-        treeAddressRepository.deleteByTreeId(treeId);
+//            // 1. fund transactions
+//            fundEventTransactionRepository.deleteByPersonIds(personIds);
 
-        // Cuối cùng mới delete tree
+            // 2. media
+            mediaFilePersonRepository.deleteByPersonIdIn(personIds);
+
+            // 3. events
+            personEventRepository.deleteByPersonIdIn(personIds);
+
+            // 4. address
+            personAddressRepository.deleteByPersonIdIn(personIds);
+
+            // 5. family children
+            familyChildrenRepository.deleteByPersonIdIn(personIds);
+
+            // 6. families (parent1, parent2)
+            familyRepository.deleteByParentIdIn(personIds);
+
+            // xoá mapping tree_persons
+            treePersonRepository.deleteByTreeId(treeId);
+
+            // 7. cuối cùng mới delete persons
+            personRepository.deleteAllById(personIds);
+        }
+
+
+
+        // cuối cùng
         treeRepository.deleteById(treeId);
     }
 

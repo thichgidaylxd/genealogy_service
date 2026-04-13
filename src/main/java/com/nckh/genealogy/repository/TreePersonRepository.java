@@ -23,4 +23,9 @@ public interface TreePersonRepository extends JpaRepository<TreePerson, UUID> {
     @Modifying
     @Query("DELETE FROM TreePerson tp WHERE tp.person.id = :personId")
     void deleteByPersonId(@Param("personId") UUID personId);
+
+    @Query("select tp.person.id from TreePerson tp where tp.tree.id = :treeId")
+    List<UUID> findPersonIdsByTreeId(UUID treeId);
+
+    boolean existsByTreeIdAndPersonId(UUID treeId, UUID personBId);
 }

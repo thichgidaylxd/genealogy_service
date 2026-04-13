@@ -23,4 +23,5 @@ public interface PersonEventRepository extends JpaRepository<PersonEvent, UUID> 
 
     boolean existsByPersonIdAndEventTypeId(UUID personId, UUID eventTypeId);
 
+    void deleteByPersonIdIn(List<UUID> personIds);
 }
